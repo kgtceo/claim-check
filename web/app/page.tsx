@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { checkClaims, fetchSamples } from "../lib/api";
+import { FALLBACK_SAMPLES } from "../lib/samples";
 import type { CheckResult, Finding, Sample } from "../lib/types";
 
 const PLACEHOLDER = `1. A device comprising:
@@ -34,7 +35,9 @@ function FindingCard({ f }: { f: Finding }) {
 }
 
 export default function Home() {
-  const [samples, setSamples] = useState<Sample[]>([]);
+  // Seeded with the baked-in samples so "Load example" is tappable immediately,
+  // even while the backend is still cold-starting.
+  const [samples, setSamples] = useState<Sample[]>(FALLBACK_SAMPLES);
   const [text, setText] = useState("");
   const [result, setResult] = useState<CheckResult | null>(null);
   const [loading, setLoading] = useState(false);
