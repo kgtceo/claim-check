@@ -2,6 +2,8 @@
 
 ### ▶ Live demo: **[claim-check.kareemghazal.com](https://claim-check.kareemghazal.com)**
 
+[![CI](https://github.com/kgtceo/claim-check/actions/workflows/ci.yml/badge.svg)](https://github.com/kgtceo/claim-check/actions/workflows/ci.yml)
+
 A **patent-claim structure & antecedent-basis linter**. Paste a claim set; a **deterministic engine**
 decides the structural defects a drafter must not get wrong, and the **LLM only explains** each one and
 suggests a fix — it never decides a defect and never opines on legal outcomes. Ships an eval harness.
@@ -69,7 +71,16 @@ prompt was then constrained so it stays strictly drafting-assistance. That's the
 The set is **7 hand-labelled claim sets** — 2 clean and 5 with a planted defect (missing antecedent
 basis in an independent claim and in a dependent claim, a forward dependency, a self-reference, and a
 multi-sentence claim). It's enough to gate the engine's behaviour on each defect type, not a benchmark;
-add your own to `evals/dataset/cases.json`.
+add your own — each case is one JSON object in `evals/dataset/cases.json`:
+
+```json
+{ "name": "my-case",
+  "claims": "1. A device comprising a widget coupled to the controller.",
+  "expect_errors": [{ "claim_number": 1, "kind": "antecedent_basis" }] }
+```
+
+`kind` is one of `antecedent_basis` · `dependency` · `single_sentence` · `indefiniteness`; use
+`"expect_errors": []` for a clean claim set.
 
 ## Limitations (what it does NOT do)
 
@@ -109,6 +120,10 @@ npm run dev                           # open http://localhost:3000
 ```
 
 To deploy (Railway for the API, Vercel for `web/`), see [DEPLOY.md](./DEPLOY.md).
+
+**Cost / infra:** the deterministic engine, the offline tests, and the eval gates need **no API key
+and no spend** — only the LLM *explanations* call the Anthropic API (a few cents per run on Sonnet).
+Railway + Vercel free tiers are enough to host the live demo.
 
 ## License
 
