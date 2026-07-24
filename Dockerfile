@@ -3,4 +3,4 @@ WORKDIR /app
 COPY pyproject.toml README.md ./
 COPY src ./src
 RUN pip install --no-cache-dir .
-CMD ["sh", "-c", "python -m uvicorn care_recall.api:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["sh", "-c", "python -m uvicorn claim_check.api:app --host 0.0.0.0 --port ${PORT:-8000}"]
