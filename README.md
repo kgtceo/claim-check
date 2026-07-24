@@ -66,6 +66,24 @@ actionable, and free of legal overreach. Notably the judge originally **caught t
 (predicting examiner rejections, escalating a single-sentence issue to "indefinite") — the explainer
 prompt was then constrained so it stays strictly drafting-assistance. That's the eval doing its job.
 
+The set is **7 hand-labelled claim sets** — 2 clean and 5 with a planted defect (missing antecedent
+basis in an independent claim and in a dependent claim, a forward dependency, a self-reference, and a
+multi-sentence claim). It's enough to gate the engine's behaviour on each defect type, not a benchmark;
+add your own to `evals/dataset/cases.json`.
+
+## Limitations (what it does NOT do)
+
+- It's a **heuristic linter**, not a legal determination. Noun-phrase detection is rule-based (a
+  controlled token-walk), so unusual or very long claim phrasing can miss or over-flag an element —
+  always have a human confirm.
+- Antecedent basis is resolved within a claim and its dependency chain; **deeply nested or unusual
+  multiple-dependent chains** are approximated.
+- It expects **conventionally-formatted, numbered claims** (US/EPO drafting style); non-standard
+  formatting may parse imperfectly.
+- It covers claim **formalities** — antecedent basis, claim dependency, single-sentence form, and
+  relative-term (§112(b)) flags (the last is advisory). It says **nothing** about novelty, obviousness,
+  enablement, or substantive patentability.
+
 ## Tests
 
 ```bash
