@@ -33,5 +33,21 @@
     "name": "multi-sentence",
     "claims": "1. A gadget comprising a widget. The widget is coupled to a base.",
     "expect_errors": [{"claim_number": 1, "kind": "single_sentence"}]
+  },
+  {
+    "name": "real-patent-pagerank-clean",
+    "claims": "1. A computer implemented method of scoring a plurality of linked documents, comprising: obtaining a plurality of documents, at least some of the documents being linked documents, at least some of the documents being linking documents, and at least some of the documents being both linked documents and linking documents, each of the linked documents being pointed to by a link in one or more of the linking documents; assigning a score to each of the linked documents based on scores of the one or more linking documents and processing the linked documents according to their scores.\n2. The method of claim 1, wherein the assigning includes: identifying a weighting factor for each of the linking documents, the weighting factor being dependent on the number of links to the one or more linking documents, and adjusting the score of each of the one or more linking documents based on the identified weighting factor.\n3. The method of claim 1, wherein the assigning includes: identifying a weighting factor for each of the linking documents, the weighting factor being dependent on an estimation of a probability that a linking document will be accessed, and adjusting the score of each of the one or more linking documents based on the identified weighting factor.",
+    "expect_errors": [],
+    "source": "REAL granted claims: claims 1-3 of US 6,285,999 (PageRank, granted 2001, expired). Regression case for real-claim drafting conventions — each once false-positived: 'The method of claim 1' (dependent preamble), 'the assigning' (gerund step reference), 'the one or more linking documents' (quantifier), 'the identified weighting factor' (leading participle), and 'A computer implemented method' hiding the head noun behind a participle."
+  },
+  {
+    "name": "gerund-without-step",
+    "claims": "1. A method comprising heating a substrate, wherein the mixing is continuous.",
+    "expect_errors": [{"claim_number": 1, "kind": "antecedent_basis"}]
+  },
+  {
+    "name": "participle-without-base-element",
+    "claims": "1. A device comprising a housing, wherein the identified sensor is active.",
+    "expect_errors": [{"claim_number": 1, "kind": "antecedent_basis"}]
   }
 ]

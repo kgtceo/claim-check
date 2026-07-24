@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
-const url = "https://claimcheck.kareemghazal.com";
+const url = "https://claim-check.kareemghazal.com";
 const title = "claim-check — patent claim structure & antecedent-basis linter";
 const description =
   "Paste a numbered patent claim set and get a heuristic structural review: claim dependencies, antecedent-basis gaps, single-sentence and indefiniteness checks. Educational — not legal advice.";

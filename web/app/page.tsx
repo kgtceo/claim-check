@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { checkClaims, fetchSamples } from "../lib/api";
-import type { CheckResult, Finding, SamplesResponse } from "../lib/types";
+import type { CheckResult, Finding, Sample } from "../lib/types";
 
 const PLACEHOLDER = `1. A device comprising:
    a housing;
@@ -34,7 +34,7 @@ function FindingCard({ f }: { f: Finding }) {
 }
 
 export default function Home() {
-  const [samples, setSamples] = useState<SamplesResponse>({});
+  const [samples, setSamples] = useState<Sample[]>([]);
   const [text, setText] = useState("");
   const [result, setResult] = useState<CheckResult | null>(null);
   const [loading, setLoading] = useState(false);
@@ -42,7 +42,7 @@ export default function Home() {
 
   useEffect(() => {
     fetchSamples()
-      .then(setSamples)
+      .then((r) => setSamples(r.samples))
       .catch((e) => setError(e instanceof Error ? e.message : "Could not load samples."));
   }, []);
 
@@ -78,14 +78,15 @@ export default function Home() {
       </div>
 
       <label htmlFor="claims">Patent claim set</label>
-      {Object.keys(samples).length > 0 && (
+      {samples.length > 0 && (
         <div className="samples">
-          {Object.entries(samples).map(([name, body]) => (
+          {samples.map((s) => (
             <button
-              key={name}
-              onClick={() => { setText(body); setResult(null); setError(null); }}
+              key={s.name}
+              onClick={() => { setText(s.claims); setResult(null); setError(null); }}
             >
-              {name}
+              {s.name}
+              {s.tag && <span className="sample-tag">{s.tag}</span>}
             </button>
           ))}
         </div>

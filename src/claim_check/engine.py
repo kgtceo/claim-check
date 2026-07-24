@@ -14,6 +14,16 @@ token-walk (not greedy regex): after an article we take the noun-phrase head up 
 participle. It is deliberately conservative — skips patent boilerplate, matches on the NP head, and
 stays quiet on a claim whose dependency is already broken — to avoid crying wolf. The LLM never runs
 here; it only explains these findings afterwards.
+
+Real-claim drafting conventions (added after running a real granted claim set — claims 1-3 of
+US 6,285,999, Google's PageRank patent — produced 10 false positives, one per convention):
+  • "The method of claim 1"      — a dependent-claim preamble reference needs no in-claim intro.
+  • "the assigning"              — a gerund refers to a method STEP introduced as a verb
+                                   ("assigning a score…"), in this claim or an ancestor.
+  • "the one or more X"          — the quantifier is part of the determiner, not the element.
+  • "the identified X"           — a leading past-participle modifies an already-introduced X.
+  • "a computer implemented method" — a mid-phrase participle must not hide the head noun the
+                                   intro actually provides ("method").
 """
 
 from __future__ import annotations
@@ -135,46 +145,91 @@ def _walk_np(words: list[str], j: int) -> list[str]:
     return out
 
 
-def _elements(body: str) -> tuple[list[tuple[int, list[str]]], list[tuple[int, list[str], str]]]:
+def _add_intro(intros: list[tuple[int, list[str]]], pos: int, words: list[str], j: int, n: int) -> None:
+    """Record an introduction NP starting at word index j — and, when the walk stopped at a
+    mid-phrase participle ('a computer IMPLEMENTED method'), also record the continuation NP
+    ('method'), which is the head the intro actually provides."""
+    np = _walk_np(words, j)
+    if not np:
+        return
+    intros.append((pos, np))
+    brk = j + len(np)
+    if brk < n:
+        breaker = words[brk].lower()
+        if _is_participle(breaker) and breaker not in _STOP:
+            cont = _walk_np(words, brk + 1)
+            if cont:
+                intros.append((pos, cont))
+
+
+# Words after "the/said <NP>" that mark a dependent-claim preamble reference
+# ("The method of claim 1" / "The device according to claim 2" / "as claimed in claim 3").
+def _is_claim_ref(words: list[str], after: int, n: int) -> bool:
+    nxt = [words[k].lower() for k in range(after, min(after + 4, n))]
+    if len(nxt) >= 2 and nxt[0] == "of" and nxt[1] in ("claim", "claims"):
+        return True
+    if len(nxt) >= 3 and nxt[0] == "according" and nxt[1] == "to" and nxt[2] in ("claim", "claims"):
+        return True
+    if len(nxt) >= 4 and nxt[0] == "as" and nxt[1] in ("recited", "claimed", "defined", "set") \
+            and ("claim" in nxt or "claims" in nxt):
+        return True
+    return False
+
+
+def _elements(
+    body: str,
+) -> tuple[list[tuple[int, list[str]]], list[tuple[int, list[str], str, list[str] | None]]]:
     """Return (introductions, references).
     introductions: (position, np-tokens) for 'a/an/at least one/a plurality of ... X'.
-    references:    (position, np-tokens, article) for 'the/said X'."""
+    references:    (position, np-tokens, article, alt-np-tokens) for 'the/said X'. The alt NP is
+    the phrase with a leading past-participle stripped ('the identified weighting factor' →
+    'weighting factor'), or None."""
     toks = [(m.group(0), m.start()) for m in _WORD.finditer(body)]
     words = [t[0] for t in toks]
     intros: list[tuple[int, list[str]]] = []
-    refs: list[tuple[int, list[str], str]] = []
+    refs: list[tuple[int, list[str], str, list[str] | None]] = []
     i, n = 0, len(toks)
     while i < n:
         w, pos = words[i].lower(), toks[i][1]
         if w in ("a", "an"):
             # "a plurality of X" / "a set of X" ...
             if w == "a" and i + 2 < n and words[i + 1].lower() in _QUANT_OF and words[i + 2].lower() == "of":
-                np = _walk_np(words, i + 3)
-                if np:
-                    intros.append((pos, np))
+                _add_intro(intros, pos, words, i + 3, n)
                 i += 3
                 continue
-            np = _walk_np(words, i + 1)
-            if np:
-                intros.append((pos, np))
+            _add_intro(intros, pos, words, i + 1, n)
             i += 1
             continue
         if w == "at" and i + 2 < n and words[i + 1].lower() == "least" and words[i + 2].lower() == "one":
-            np = _walk_np(words, i + 3)
-            if np:
-                intros.append((pos, np))
+            _add_intro(intros, pos, words, i + 3, n)
             i += 3
             continue
         if w == "one" and i + 2 < n and words[i + 1].lower() == "or" and words[i + 2].lower() == "more":
-            np = _walk_np(words, i + 3)
-            if np:
-                intros.append((pos, np))
+            _add_intro(intros, pos, words, i + 3, n)
             i += 3
             continue
         if w in ("the", "said"):
-            np = _walk_np(words, i + 1)
+            # "the one or more X" / "the at least one X" — the quantifier belongs to the
+            # determiner, not the element ("the one" is not an element).
+            j = i + 1
+            if i + 3 < n and [x.lower() for x in words[i + 1 : i + 4]] == ["one", "or", "more"]:
+                j = i + 4
+            elif i + 3 < n and [x.lower() for x in words[i + 1 : i + 4]] == ["at", "least", "one"]:
+                j = i + 4
+            np = _walk_np(words, j)
             if np:
-                refs.append((pos, np, words[i]))
+                # "The method of claim 1" — dependent-claim preamble; the parent claim provides
+                # the basis, so it is not an in-claim reference.
+                if _is_claim_ref(words, j + len(np), n):
+                    i += 1
+                    continue
+                # "the identified weighting factor" — a leading past-participle refers back to a
+                # step ('identifying a weighting factor'); the element is the NP underneath.
+                alt: list[str] | None = None
+                head = np[0]
+                if head.endswith("ed") and head not in _NOUN_ING_ED and j + 1 < n:
+                    alt = _walk_np(words, j + 1) or None
+                refs.append((pos, np, words[i], alt))
             i += 1
             continue
         i += 1
@@ -203,6 +258,7 @@ def _matches(ref: list[str], intro: list[str]) -> bool:
 def _check_antecedent_basis(claim: Claim, by_number: dict[int, Claim]) -> list[Finding]:
     # elements introduced anywhere in the dependency chain (position irrelevant for ancestors)
     ancestor_intros: list[list[str]] = []
+    ancestor_texts: list[str] = []
     seen: set[int] = set()
     stack = list(claim.depends_on)
     while stack:
@@ -212,16 +268,30 @@ def _check_antecedent_basis(claim: Claim, by_number: dict[int, Claim]) -> list[F
         seen.add(num)
         parent = by_number[num]
         ancestor_intros += [np for _, np in _elements(parent.text)[0]]
+        ancestor_texts.append(parent.text)
         stack += parent.depends_on
 
     own_intros, refs = _elements(claim.text)
-    findings: list[Finding] = []
-    for pos, phrase, article in refs:
-        if phrase[-1] in _BOILERPLATE or phrase[0] in _BOILERPLATE:
-            continue
-        covered = any(_matches(phrase, a) for a in ancestor_intros) or any(
+
+    def _covered_by_intros(phrase: list[str], pos: int) -> bool:
+        return any(_matches(phrase, a) for a in ancestor_intros) or any(
             ip < pos and _matches(phrase, inp) for ip, inp in own_intros
         )
+
+    findings: list[Finding] = []
+    for pos, phrase, article, alt in refs:
+        if phrase[-1] in _BOILERPLATE or phrase[0] in _BOILERPLATE:
+            continue
+        covered = _covered_by_intros(phrase, pos)
+        # "the identified weighting factor" — the element under the participle has basis.
+        if not covered and alt:
+            covered = _covered_by_intros(alt, pos)
+        # "the assigning" — a gerund referring to a method STEP introduced as a verb earlier in
+        # this claim or in an ancestor ("assigning a score to each of the linked documents…").
+        if not covered and len(phrase) == 1 and phrase[0].endswith("ing") and phrase[0] not in _NOUN_ING_ED:
+            step = re.compile(rf"\b{re.escape(phrase[0])}\b", re.IGNORECASE)
+            if step.search(claim.text[:pos]) or any(step.search(t) for t in ancestor_texts):
+                covered = True
         if not covered:
             display = " ".join(phrase)
             span = f"{article} {display}"

@@ -8,7 +8,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from .data.sample_claims import SAMPLE_CLAIMS
+from .data.sample_claims import SAMPLE_CLAIMS, SAMPLE_TAGS
 from .explainer import ClaimChecker
 from .models import CheckResult
 
@@ -42,8 +42,13 @@ def _get_checker() -> ClaimChecker:
 
 
 @app.get("/api/samples")
-def samples() -> dict[str, str]:
-    return SAMPLE_CLAIMS
+def samples() -> dict:
+    return {
+        "samples": [
+            {"name": name, "claims": claims, "tag": SAMPLE_TAGS.get(name, "")}
+            for name, claims in SAMPLE_CLAIMS.items()
+        ]
+    }
 
 
 @app.post("/api/check", response_model=CheckResult)

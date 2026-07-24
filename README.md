@@ -66,15 +66,34 @@ python evals/run_evals.py --judge    # + LLM explanations + an opus faithfulness
 - **Judge** (opus) — the explanations are *faithful* to the findings, *actionable*, and stay drafting
   assistance (no legal-outcome opinions).
 
-**Latest run (claude-sonnet-4-6, opus judge):** all gates pass — **5/5 planted errors caught**,
-clean sets silent, all findings grounded, and the opus judge confirms every explanation is faithful,
-actionable, and free of legal overreach. Notably the judge originally **caught the model overreaching**
-(predicting examiner rejections, escalating a single-sentence issue to "indefinite") — the explainer
-prompt was then constrained so it stays strictly drafting-assistance. That's the eval doing its job.
+Every run writes a **reproducible artifact** to [`evals/results/latest.json`](evals/results/latest.json)
+— per-case outcomes, the models used, and a timestamp. The numbers below come from that file.
 
-The set is **7 hand-labelled claim sets** — 2 clean and 5 with a planted defect (missing antecedent
-basis in an independent claim and in a dependent claim, a forward dependency, a self-reference, and a
-multi-sentence claim). It's enough to gate the engine's behaviour on each defect type, not a benchmark;
+**Latest run (claude-sonnet-4-6 explainer, opus judge):** all gates pass — **7/7 planted errors
+caught**, clean sets silent (including a **real granted claim set**, below), all findings grounded,
+and the opus judge passes every explanation as faithful, actionable, and free of legal overreach.
+
+**The judge has now caught the model twice** — both true stories, both fixed by tightening the
+explainer prompt: (1) it originally **overreached** (predicting examiner rejections, escalating a
+single-sentence issue to "indefinite") → constrained to strict drafting-assistance; (2) it later
+produced a **non-actionable fix** — for "the identified sensor" it suggested introducing "a sensor",
+silently dropping "identified" — → the fix must now quote and correct the claim's exact language.
+That's the eval doing its job: deterministic gates can't see either failure.
+
+**Tested on real granted claims.** Running claims 1-3 of **US 6,285,999 (Google's PageRank patent,
+granted 2001, expired)** through an earlier engine produced **10 false positives** — every one a
+standard drafting convention the rules didn't model: the dependent-claim preamble ("The method of
+claim 1"), gerund references to method steps ("the assigning"), quantifier phrases ("the one or
+more linking documents"), leading past-participles ("the identified weighting factor"), and a
+mid-phrase participle hiding the intro's head noun ("A computer implemented method"). Each is now
+an explicit engine rule with its own unit test, negative controls prove the rules don't swallow
+real defects (a gerund with no step and a participle with no base element still flag), and the
+PageRank set is a permanent clean regression case in both the test suite and the eval set.
+
+The set is **10 hand-labelled claim sets** — 3 clean (including the real PageRank claims) and 7 with
+a planted defect (missing antecedent basis in an independent and a dependent claim, a forward
+dependency, a self-reference, a multi-sentence claim, a gerund with no step, and a participle with
+no base element). It's enough to gate the engine's behaviour on each defect type, not a benchmark;
 add your own — each case is one JSON object in `evals/dataset/cases.json`:
 
 ```json

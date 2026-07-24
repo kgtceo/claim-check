@@ -34,5 +34,12 @@ export interface CheckResult {
   summary: string;
 }
 
-// Sample claim sets keyed by name: { [name]: claimsText }
-export type SamplesResponse = Record<string, string>;
+// Sample claim sets, each with a display tag ("" when none).
+export interface Sample {
+  name: string;
+  claims: string;
+  tag: string;
+}
+export interface SamplesResponse {
+  samples: Sample[];
+}

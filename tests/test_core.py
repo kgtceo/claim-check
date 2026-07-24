@@ -79,3 +79,69 @@ def test_explainer_without_client_returns_findings_offline():
         "1. A device comprising a processor coupled to the controller."
     )
     assert result.error_count >= 1
+
+
+# ── real-claim drafting conventions (added after linting real granted claims) ────────────────
+
+PAGERANK_CLAIMS = (
+    "1. A computer implemented method of scoring a plurality of linked documents, comprising: "
+    "obtaining a plurality of documents, at least some of the documents being linked documents, "
+    "at least some of the documents being linking documents, and at least some of the documents "
+    "being both linked documents and linking documents, each of the linked documents being "
+    "pointed to by a link in one or more of the linking documents; assigning a score to each of "
+    "the linked documents based on scores of the one or more linking documents and processing "
+    "the linked documents according to their scores.\n"
+    "2. The method of claim 1, wherein the assigning includes: identifying a weighting factor "
+    "for each of the linking documents, the weighting factor being dependent on the number of "
+    "links to the one or more linking documents, and adjusting the score of each of the one or "
+    "more linking documents based on the identified weighting factor.\n"
+    "3. The method of claim 1, wherein the assigning includes: identifying a weighting factor "
+    "for each of the linking documents, the weighting factor being dependent on an estimation "
+    "of a probability that a linking document will be accessed, and adjusting the score of each "
+    "of the one or more linking documents based on the identified weighting factor."
+)
+
+
+def test_real_patent_pagerank_claims_are_clean():
+    """Claims 1-3 of US 6,285,999 (PageRank, granted 2001, expired) — real granted claim
+    language must produce ZERO errors. Each of these once false-positived (dependent-claim
+    preamble, gerund step reference, 'the one or more', leading past-participle)."""
+    claims, findings = analyze(PAGERANK_CLAIMS)
+    assert [(c.number, c.depends_on) for c in claims] == [(1, []), (2, [1]), (3, [1])]
+    assert [f for f in findings if f.severity == "error"] == []
+
+
+def test_dependent_preamble_reference_is_exempt():
+    # "The method of claim 1" needs no in-claim antecedent even when the parent's preamble
+    # noun is buried behind a participle ("A computer implemented method").
+    text = "1. A computer implemented method comprising receiving a signal.\n2. The method of claim 1, wherein the signal is digital."
+    assert not [f for f in _errors(text) if f.kind == "antecedent_basis"]
+
+
+def test_gerund_step_reference_has_basis():
+    # "the amplifying" refers to the step "amplifying the signal" in the parent claim.
+    text = "1. A method comprising receiving a signal and amplifying the signal.\n2. The method of claim 1, wherein the amplifying is digital."
+    assert not [f for f in _errors(text) if f.kind == "antecedent_basis"]
+
+
+def test_gerund_without_a_step_is_still_flagged():
+    text = "1. A method comprising heating a substrate, wherein the mixing is continuous."
+    errs = [f for f in _errors(text) if f.kind == "antecedent_basis"]
+    assert errs and "mixing" in errs[0].span
+
+
+def test_quantifier_after_definite_article_is_not_an_element():
+    # "the one or more sensors" refers to the sensors, not to an element "one".
+    text = "1. A device comprising one or more sensors, wherein the one or more sensors are optical."
+    assert not [f for f in _errors(text) if f.kind == "antecedent_basis"]
+
+
+def test_leading_past_participle_reference_has_basis():
+    # "the identified weighting factor" ← "identifying a weighting factor".
+    text = "1. A method comprising identifying a weighting factor and adjusting a score based on the identified weighting factor."
+    assert not [f for f in _errors(text) if f.kind == "antecedent_basis"]
+
+
+def test_leading_past_participle_without_base_element_is_still_flagged():
+    text = "1. A device comprising a housing, wherein the identified sensor is active."
+    assert [f for f in _errors(text) if f.kind == "antecedent_basis"]

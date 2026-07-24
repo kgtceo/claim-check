@@ -1,0 +1,158 @@
+{
+  "run": {
+    "timestamp_utc": "2026-07-24T04:55:37+00:00",
+    "engine": "deterministic (no LLM)",
+    "explainer_model": "claude-sonnet-4-6",
+    "judge_model": "claude-opus-4-8",
+    "dataset_size": 10
+  },
+  "metrics": {
+    "planted_errors_caught": "7/7",
+    "judge_pass": "7/7",
+    "all_gates_passed": true
+  },
+  "failures": [],
+  "per_case": [
+    {
+      "name": "clean-apparatus",
+      "source": null,
+      "errors_found": 0,
+      "errors_expected": 0,
+      "recall_ok": true,
+      "precision_ok": true,
+      "grounded": true
+    },
+    {
+      "name": "clean-method",
+      "source": null,
+      "errors_found": 0,
+      "errors_expected": 0,
+      "recall_ok": true,
+      "precision_ok": true,
+      "grounded": true
+    },
+    {
+      "name": "missing-antecedent-independent",
+      "source": null,
+      "errors_found": 1,
+      "errors_expected": 1,
+      "recall_ok": true,
+      "precision_ok": true,
+      "grounded": true
+    },
+    {
+      "name": "missing-antecedent-dependent",
+      "source": null,
+      "errors_found": 1,
+      "errors_expected": 1,
+      "recall_ok": true,
+      "precision_ok": true,
+      "grounded": true
+    },
+    {
+      "name": "forward-dependency",
+      "source": null,
+      "errors_found": 1,
+      "errors_expected": 1,
+      "recall_ok": true,
+      "precision_ok": true,
+      "grounded": true
+    },
+    {
+      "name": "self-reference",
+      "source": null,
+      "errors_found": 1,
+      "errors_expected": 1,
+      "recall_ok": true,
+      "precision_ok": true,
+      "grounded": true
+    },
+    {
+      "name": "multi-sentence",
+      "source": null,
+      "errors_found": 1,
+      "errors_expected": 1,
+      "recall_ok": true,
+      "precision_ok": true,
+      "grounded": true
+    },
+    {
+      "name": "real-patent-pagerank-clean",
+      "source": "REAL granted claims: claims 1-3 of US 6,285,999 (PageRank, granted 2001, expired). Regression case for real-claim drafting conventions \u2014 each once false-positived: 'The method of claim 1' (dependent preamble), 'the assigning' (gerund step reference), 'the one or more linking documents' (quantifier), 'the identified weighting factor' (leading participle), and 'A computer implemented method' hiding the head noun behind a participle.",
+      "errors_found": 0,
+      "errors_expected": 0,
+      "recall_ok": true,
+      "precision_ok": true,
+      "grounded": true
+    },
+    {
+      "name": "gerund-without-step",
+      "source": null,
+      "errors_found": 1,
+      "errors_expected": 1,
+      "recall_ok": true,
+      "precision_ok": true,
+      "grounded": true
+    },
+    {
+      "name": "participle-without-base-element",
+      "source": null,
+      "errors_found": 1,
+      "errors_expected": 1,
+      "recall_ok": true,
+      "precision_ok": true,
+      "grounded": true
+    }
+  ],
+  "judge": [
+    {
+      "name": "missing-antecedent-independent",
+      "faithful": true,
+      "actionable": true,
+      "no_legal_overreach": true,
+      "comment": "The explanation faithfully tracks the single finding: it identifies 'the controller' being referenced via the definite article without prior introduction, and introduces no new alleged defect. The fix is concrete and directly resolves the deficiency, offering both remediation paths flagged in the summary (replace with the already-introduced 'the processor', or introduce 'a controller' earlier). It reads as drafting assistance describing the formal antecedent-basis convention rather than rendering a legal opinion on validity or infringement."
+    },
+    {
+      "name": "missing-antecedent-dependent",
+      "faithful": true,
+      "actionable": true,
+      "no_legal_overreach": true,
+      "comment": "The explanation faithfully tracks the single finding: it restates that 'the display' uses a definite article without any prior introduction of 'display' via 'a'/'an' in claim 2 or parent claim 1, and it names the antecedent basis drafting requirement. No new alleged defect is introduced. The fix is concrete and directly resolves the finding, offering two valid options (add 'a display' in claim 1, or introduce 'a display' within claim 2) with example redlines. The framing stays at the level of drafting assistance \u2014 describing the antecedent basis convention and how to satisfy it \u2014 rather than issuing a legal opinion on validity, enforceability, or examination outcome."
+    },
+    {
+      "name": "forward-dependency",
+      "faithful": true,
+      "actionable": true,
+      "no_legal_overreach": true,
+      "comment": "The explanation faithfully restates the single finding: claim 2 forward-references claim 4, and a dependent claim may only refer to a preceding claim. No new alleged defect is introduced. The fix is concrete and actionable \u2014 it changes the antecedent reference from claim 4 to claim 1, a preceding claim, directly resolving the forward-dependency defect. The language stays in drafting-assistance mode (describing structural claim mechanics) and does not opine on validity, infringement, or patentability, so there is no legal overreach. One minor note: the parenthetical \"(or does not yet exist at that point)\" is slight hedging, but it remains consistent with the finding rather than alleging a separate defect."
+    },
+    {
+      "name": "self-reference",
+      "faithful": true,
+      "actionable": true,
+      "no_legal_overreach": true,
+      "comment": "The explanation accurately restates the finding (claim 2 self-references) without introducing any new alleged defect, matching the single finding in the summary. The fix is concrete and directly resolves the issue by redirecting the dependency from claim 2 to claim 1, with an exact before/after edit. The language stays within drafting-assistance bounds \u2014 it describes a formal claim-numbering convention and a specific textual correction, not a legal opinion on patentability, validity, or infringement."
+    },
+    {
+      "name": "multi-sentence",
+      "faithful": true,
+      "actionable": true,
+      "no_legal_overreach": true,
+      "comment": "Faithful: The explanation matches the single_sentence finding precisely, identifying the two sentences (\"A gadget comprising a widget.\" and \"The widget is coupled to a base.\") and restates the single-sentence requirement without inventing any new defect (e.g., it does not add antecedent-basis or indefiniteness claims).\n\nActionable: The fix concretely resolves the finding by merging the two sentences into one continuous claim, with a specific example (\"A gadget comprising: a widget coupled to a base.\") that directly addresses the split-sentence problem.\n\nNo legal overreach: The explanation and fix read as drafting assistance regarding claim form, not a legal opinion on patentability, validity, or infringement."
+    },
+    {
+      "name": "gerund-without-step",
+      "faithful": true,
+      "actionable": true,
+      "no_legal_overreach": true,
+      "comment": "The single finding is antecedent basis for \"the mixing.\" The explanation accurately restates this: definite article requires prior indefinite introduction, \"mixing\" never appears earlier, so no antecedent basis. It introduces no new alleged defect and stays consistent with the finding. Faithful.\n\nThe fix concretely addresses the finding by introducing \"mixing\" earlier in the claim body with a sample redraft, so \"the mixing\" in the wherein clause has proper antecedent support. Actionable.\n\nThe language reads as drafting assistance (how to revise the claim wording) rather than a legal opinion on validity, infringement, or patentability. No legal overreach."
+    },
+    {
+      "name": "participle-without-base-element",
+      "faithful": true,
+      "actionable": true,
+      "no_legal_overreach": true,
+      "comment": "Faithful: The explanation accurately restates the single antecedent-basis finding \u2014 'the identified sensor' uses a definite article without prior introduction via 'a'/'an' in claim 1 or its parent claims. It introduces no new alleged defect. Actionable: The fix concretely addresses the finding by recommending introduction of the element with an indefinite article on first use, and even provides a concrete rewrite example ('an identified sensor') that establishes proper antecedent basis. Aligned with the summary. No legal overreach: The explanation and fix read as formal drafting assistance about definite/indefinite article usage, not as a legal opinion on patentability, validity, or infringement."
+    }
+  ]
+}
