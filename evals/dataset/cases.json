@@ -1,0 +1,37 @@
+[
+  {
+    "name": "clean-apparatus",
+    "claims": "1. An apparatus comprising: a processor; a memory storing instructions; and a network interface, wherein the memory further stores a plurality of records, and the processor is configured to transmit the records via the network interface.\n2. The apparatus of claim 1, wherein the processor comprises a first core and a second core.\n3. The apparatus of claim 2, wherein the first core and the second core share a cache.",
+    "expect_errors": []
+  },
+  {
+    "name": "clean-method",
+    "claims": "1. A method comprising: receiving a signal; filtering the signal to produce a filtered signal; and outputting the filtered signal.\n2. The method of claim 1, further comprising amplifying the filtered signal.",
+    "expect_errors": []
+  },
+  {
+    "name": "missing-antecedent-independent",
+    "claims": "1. A device comprising a housing, a processor within the housing, and a battery coupled to the controller.",
+    "expect_errors": [{"claim_number": 1, "kind": "antecedent_basis"}]
+  },
+  {
+    "name": "missing-antecedent-dependent",
+    "claims": "1. A device comprising a sensor and a processor.\n2. The device of claim 1, wherein the display shows a reading.",
+    "expect_errors": [{"claim_number": 2, "kind": "antecedent_basis"}]
+  },
+  {
+    "name": "forward-dependency",
+    "claims": "1. A method comprising receiving a signal and filtering the signal.\n2. The method of claim 4, further comprising amplifying the signal.",
+    "expect_errors": [{"claim_number": 2, "kind": "dependency"}]
+  },
+  {
+    "name": "self-reference",
+    "claims": "1. A widget comprising a body.\n2. The widget of claim 2, wherein the body is metal.",
+    "expect_errors": [{"claim_number": 2, "kind": "dependency"}]
+  },
+  {
+    "name": "multi-sentence",
+    "claims": "1. A gadget comprising a widget. The widget is coupled to a base.",
+    "expect_errors": [{"claim_number": 1, "kind": "single_sentence"}]
+  }
+]

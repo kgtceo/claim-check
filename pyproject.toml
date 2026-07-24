@@ -1,0 +1,35 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "claim-check"
+version = "1.0.0"
+description = "A patent-claim structure & antecedent-basis linter — a deterministic engine decides the defects, the LLM only explains them, with an eval harness. Educational, not legal advice."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Kareem Ghazal" }]
+dependencies = [
+    "anthropic>=0.39",
+    "pydantic>=2.5",
+    "python-dotenv>=1.0",
+    "typer>=0.12",
+    "rich>=13.7",
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+claim-check = "claim_check.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/claim_check"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "tests", "evals"]
+testpaths = ["tests"]
+addopts = "-q"
