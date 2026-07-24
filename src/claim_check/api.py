@@ -18,7 +18,7 @@ _origins = [o.strip() for o in os.getenv("CK_CORS_ORIGINS", "").split(",") if o.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_origins,  # explicit prod origins via CK_CORS_ORIGINS (e.g. the custom domain)
-    allow_origin_regex=r"https://claim-check[a-z0-9-]*\.vercel\.app|http://localhost:3000",
+    allow_origin_regex=r"https://claim-check[a-z0-9-]*\.vercel\.app|https://claim-check\.kareemghazal\.com|http://localhost:3000",
     allow_methods=["*"],
     allow_headers=["*"],
 )
