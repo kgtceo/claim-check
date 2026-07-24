@@ -1,8 +1,12 @@
 # claim-check
 
+### ▶ Live demo: **[claim-check.kareemghazal.com](https://claim-check.kareemghazal.com)**
+
 A **patent-claim structure & antecedent-basis linter**. Paste a claim set; a **deterministic engine**
 decides the structural defects a drafter must not get wrong, and the **LLM only explains** each one and
 suggests a fix — it never decides a defect and never opines on legal outcomes. Ships an eval harness.
+
+![claim-check: antecedent-basis and structure findings on a patent claim set, each pinned to its claim with a plain-English explanation and a fix](docs/images/screenshot.png)
 
 > Built around one idea: **measure LLM systems, don't vibe them.** The clinical/patent-grade version of
 > that idea: *never let the model hallucinate the fact.* Here the facts are decided in code.
