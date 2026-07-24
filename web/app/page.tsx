@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { checkClaims, fetchSamples } from "../lib/api";
 import type { CheckResult, Finding, Sample } from "../lib/types";
 
@@ -45,6 +45,17 @@ export default function Home() {
       .then((r) => setSamples(r.samples))
       .catch((e) => setError(e instanceof Error ? e.message : "Could not load samples."));
   }, []);
+
+  const exampleIdx = useRef(0);
+
+  function loadExample() {
+    if (samples.length === 0) return;
+    const s = samples[exampleIdx.current % samples.length];
+    exampleIdx.current += 1;
+    setText(s.claims);
+    setResult(null);
+    setError(null);
+  }
 
   async function check() {
     if (!text.trim()) return;
@@ -101,6 +112,9 @@ export default function Home() {
       <div className="actions">
         <button className="primary" onClick={check} disabled={loading || !text.trim()}>
           {loading ? "Checking…" : "Check claims"}
+        </button>
+        <button onClick={loadExample} disabled={loading || samples.length === 0}>
+          Load example
         </button>
         <span className="hint">(first run ~5–10s)</span>
       </div>
