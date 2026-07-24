@@ -28,6 +28,19 @@ Add one JSON object to `evals/dataset/cases.json`:
 `"expect_errors": []` for a clean set. Good cases to add: **real-world edge cases** the heuristic
 struggles with — unusual multiple-dependent chains, EPO-style formatting, means-plus-function claims.
 
+## Add a new check to the engine (advanced)
+
+All defect detection lives in `src/claim_check/engine.py` — no LLM. To add a new `kind` (e.g.
+`means_plus_function`):
+
+1. Add the literal to `FindingKind` in `src/claim_check/models.py`.
+2. Write a `_check_<kind>(claim, ...) -> list[Finding]` in `engine.py` (return `Finding`s with a
+   verbatim `span` so the grounding gate passes).
+3. Call it from `check()` alongside the existing checks.
+4. Add labelled cases to `evals/dataset/cases.json` and keep `pytest -q` + `run_evals.py` green.
+
+The LLM only ever *explains* findings — new detection logic stays deterministic.
+
 ## Guidelines
 
 - Use **synthetic or public** patent text only — never confidential drafts.
